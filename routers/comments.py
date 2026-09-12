@@ -77,3 +77,25 @@ async def delete_comment(comment_id:UUID, db:Session = Depends(database.get_data
     db.delete(target_comment)
     db.commit()
     return "removal is successful!"
+
+@router.patch('/update/{target_id}', status_code=status.HTTP_200_OK, response_model=schemas.CommentDisplay)
+async def update_comment(target_id:UUID, new_features:schemas.CommentUpdate, db:Session = Depends(database.get_database), current_user : models.User = Depends(oauth2.get_current_user)):
+    update_features = new_features.model_dump(exclude_unset=True)
+
+    if update_features['content'] == '':
+        raise HTTPException('Comment can not be empty!', status_code=status.HTTP_406_NOT_ACCEPTABLE)
+
+    target_comment = db.query(models.Comment).filter(models.Comment.id == target_id).first()
+    if not target_comment:
+        raise HTTPException(detail='comment not found!', status_code=status.HTTP_404_NOT_FOUND)
+    elif target_comment.user_id != current_user.id:
+        raise HTTPException(detail="You are not authorized for this action", status_code=status.HTTP_403_FORBIDDEN)
+
+    target_query = db.query(models.Comment).filter(models.Comment.id == target_id)
+
+    target_query.update(update_features, synchronize_session=False)
+    db.commit()
+    return db.query(models.Comment).filter(models.Comment.id == target_id).first()
+
+
+    

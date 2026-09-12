@@ -39,6 +39,8 @@ class MemoryUpdate(BaseModel):
 class CommentCreate(BaseModel):
     content: str
 
+class CommentUpdate(BaseModel):
+    content: Optional[str] = None
 
 # ---------------- DISPLAY SCHEMAS ----------------
 

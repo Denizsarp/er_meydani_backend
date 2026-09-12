@@ -92,7 +92,7 @@ async def update_memory(memory_id:UUID, new_features:schemas.MemoryUpdate, db:Se
 
 
 @router.post('/', status_code=status.HTTP_201_CREATED, response_model=str)
-async def create_new_memory(features:schemas.MemoryCreate, db:Session = Depends(database.get_database), current_user:models.User = Depends(oauth2.get_current_user)):
+async def create_new_memory(features:schemas.MemoryCreate, db:Session = Depends(database.get_database()), current_user:models.User = Depends(oauth2.get_current_user)):
     create_data = features.model_dump(exclude_unset=True)
     if not create_data['title']:
         raise HTTPException(detail="The memory should have title!", status_code=status.HTTP_204_NO_CONTENT)

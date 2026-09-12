@@ -14,7 +14,7 @@ oauth2_scheme = OAuth2PasswordBearer(
 )
 
 
-def get_current_user(data:str = Depends(oauth2_scheme), db:Session = Depends(database.get_database)) -> models.User:
+def get_current_user(data:str = Depends(oauth2_scheme), db:Session = Depends(database.get_database())) -> models.User:
     exc = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="You are not authorized!",

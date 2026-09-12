@@ -24,7 +24,7 @@ router = APIRouter(
 #register user
 
 @router.post('/register', status_code=status.HTTP_201_CREATED, response_model=schemas.User)
-async def user_register(user_features:schemas.UserCreate, db:Session = Depends(database.get_database)):
+async def user_register(user_features:schemas.UserCreate, db:Session = Depends(database.get_database())):
     create_data = user_features.model_dump(exclude_unset=True)
     existing_user_email = db.query(models.User).filter(models.User.email == user_features.email).first()
     existing_user_username = db.query(models.User).filter(models.User.username == user_features.username).first()
@@ -53,7 +53,7 @@ async def user_register(user_features:schemas.UserCreate, db:Session = Depends(d
 
 #User Login endpoint
 @router.post('/login', status_code=status.HTTP_200_OK, response_model=dict)
-async def user_login(request:OAuth2PasswordRequestForm = Depends(), db:Session = Depends(database.get_database)):
+async def user_login(request:OAuth2PasswordRequestForm = Depends(), db:Session = Depends(database.get_database())):
     user = db.query(models.User).filter(models.User.username == request.username).first()
 
     if not user:
@@ -79,7 +79,7 @@ async def user_login(request:OAuth2PasswordRequestForm = Depends(), db:Session =
 
 #user delete
 @router.delete('/delete', status_code=status.HTTP_200_OK, response_model=str)
-async def delete_user(db:Session = Depends(database.get_database), current_user:models.User = Depends(oauth2.get_current_user)) -> str:
+async def delete_user(db:Session = Depends(database.get_database()), current_user:models.User = Depends(oauth2.get_current_user)) -> str:
     target_user = db.query(models.User).filter(models.User.id == current_user.id).first()
     if not target_user:
         raise HTTPException(detail="user not found!", status_code=status.HTTP_404_NOT_FOUND)

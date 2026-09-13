@@ -21,6 +21,11 @@ class User(Base):
     bio = Column(Text, nullable=True)
     profile_photo = Column(Text, nullable=True)
 
+    is_verified = Column(bool, nullable=False)
+    verification_code = Column(String, nullable=True)
+    verification_code_expires_at = Column(DateTime(timezone=True), nullable=True)
+    verification_code_resend_limit = Column(DateTime(timezone=True), nullable=True)
+
     memories = relationship("Memory", back_populates="user")
     comments = relationship("Comment", back_populates="user")
 

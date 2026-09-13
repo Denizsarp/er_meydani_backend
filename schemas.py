@@ -109,3 +109,11 @@ class User(BaseModel):
     model_config = {
         "from_attributes": True
     }
+
+class EmailVerification(BaseModel):
+    email:str
+    code:str
+
+
+class ResendVerification(BaseModel):
+    email:str

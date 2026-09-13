@@ -15,7 +15,7 @@ app = FastAPI(
     version="1.0.0"
 )
 
-Base.metadata.create_all(bing=engine)
+Base.metadata.create_all(bind=engine)
 
 app.include_router(auth.router)
 app.include_router(users.router)

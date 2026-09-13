@@ -1,6 +1,4 @@
 from fastapi import FastAPI, HTTPException, status, Depends, APIRouter
-from models import BookModel, UserModel
-from schemas import Book, ShowBook, User
 from typing import List, Optional
 import models
 import schemas

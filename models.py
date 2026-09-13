@@ -23,7 +23,6 @@ class User(Base):
 
     memories = relationship("Memory", back_populates="user")
     comments = relationship("Comment", back_populates="user")
-    likes = relationship("Like", back_populates="user")
 
 
 
@@ -39,7 +38,7 @@ class Memory(Base):
 
     user_id = Column(
         UUID(as_uuid=True),
-        ForeignKey("user.id"),
+        ForeignKey("users.id"),
         nullable=False
     )
 
@@ -56,38 +55,19 @@ class Comment(Base):
     content = Column(Text, nullable=False)
     user_id = Column(
         UUID(as_uuid=True),
-        ForeignKey("user.id"),
+        ForeignKey("users.id"),
         nullable=False
     )
 
     memory_id = Column(
         UUID(as_uuid=True),
-        ForeignKey("memory.id"),
+        ForeignKey("memories.id"),
         nullable=False
     )
 
     user = relationship("User", back_populates="comments")
+    memory = relationship("Memory", back_populates="comments")
 
-
-class Like(Base):
-    __tablename__ = "likes"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    created_at = Column(DateTime, nullable=False)
-
-    user_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("user.id"),
-        nullable=False
-    )
-
-    memory_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("memory.id"),
-        nullable=False
-    )
-
-    user = relationship("User", back_populates="likes")
 
 
 

@@ -3,7 +3,7 @@ Database models to be created.
 """
 
 import sqlalchemy
-from sqlalchemy import Integer, Column, String, Text, ForeignKey, DateTime
+from sqlalchemy import Integer, Column, String, Text, ForeignKey, DateTime, Boolean
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -21,7 +21,7 @@ class User(Base):
     bio = Column(Text, nullable=True)
     profile_photo = Column(Text, nullable=True)
 
-    is_verified = Column(bool, nullable=False)
+    is_verified = Column(Boolean, default=False, nullable=False)
     verification_code = Column(String, nullable=True)
     verification_code_expires_at = Column(DateTime(timezone=True), nullable=True)
     verification_code_resend_limit = Column(DateTime(timezone=True), nullable=True)

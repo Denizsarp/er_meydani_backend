@@ -6,9 +6,12 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 
-def create_access_token(data: dict):
+def create_access_token(data: dict, expires_delta:timedelta = None):
     to_encode = data.copy()
 
+    if expires_delta:
+        ACCESS_TOKEN_EXPIRE_MINUTES = expires_delta
+    
     expire = datetime.now(timezone.utc) + timedelta(
         minutes=ACCESS_TOKEN_EXPIRE_MINUTES
     )

@@ -10,10 +10,9 @@ import hashing
 from hashing import Hash
 from database import engine, SessionLocal
 from sqlalchemy.orm import Session
-import authentication
+#import authentication
 import oauth2
 import bcrypt
-
 
 
 router = APIRouter(
@@ -59,7 +58,7 @@ async def user_login(request:OAuth2PasswordRequestForm = Depends(), db:Session =
     if not user:
         raise HTTPException(detail='Invalid Credidentals!', status_code=status.HTTP_401_UNAUTHORIZED)
 
-    verify_status = Hash.verify_password(user.password, request.password)
+    verify_status = Hash.verify_password(request.password, user.password)
 
     if not verify_status:
         raise HTTPException(detail="Invalid Credidentals!", status_code=status.HTTP_401_UNAUTHORIZED)

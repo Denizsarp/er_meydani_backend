@@ -9,7 +9,7 @@ import hashing # type: ignore
 from hashing import Hash # type: ignore
 from database import engine, SessionLocal
 from sqlalchemy.orm import Session
-import authentication
+#import authentication
 import oauth2
 import uuid
 from uuid import UUID
@@ -78,6 +78,10 @@ async def delete_comment(comment_id:UUID, db:Session = Depends(database.get_data
     db.commit()
     return "removal is successful!"
 
+
+
+
+#update comment by its ID
 @router.patch('/update/{target_id}', status_code=status.HTTP_200_OK, response_model=schemas.CommentDisplay)
 async def update_comment(target_id:UUID, new_features:schemas.CommentUpdate, db:Session = Depends(database.get_database), current_user : models.User = Depends(oauth2.get_current_user)):
     update_features = new_features.model_dump(exclude_unset=True)

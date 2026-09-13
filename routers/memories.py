@@ -1,16 +1,14 @@
 from fastapi import FastAPI, HTTPException, status, Depends, APIRouter
-from models import BookModel, UserModel
-from schemas import Book, ShowBook, User
 from typing import List, Optional
 import models
 import schemas
 import database
-import hashing # type: ignore
-from hashing import Hash # type: ignore
+import hashing
+from hashing import Hash
 from datetime import datetime
 from database import engine, SessionLocal
 from sqlalchemy.orm import Session
-import authentication
+#import authentication
 import oauth2
 import uuid
 from uuid import UUID
@@ -48,6 +46,8 @@ async def get_specific_memory(memory_id:UUID, db:Session = Depends(database.get_
         raise HTTPException(detail="Memory not found!", status_code=status.HTTP_404_NOT_FOUND)
     else:
         return target_memory
+
+
 
     
 #DELETE MEMORY BY ITS ID
@@ -91,8 +91,11 @@ async def update_memory(memory_id:UUID, new_features:schemas.MemoryUpdate, db:Se
         return db.query(models.Memory).filter(models.Memory.id == memory_id).first()
 
 
-@router.post('/', status_code=status.HTTP_201_CREATED, response_model=str)
-async def create_new_memory(features:schemas.MemoryCreate, db:Session = Depends(database.get_database()), current_user:models.User = Depends(oauth2.get_current_user)):
+
+
+#create new memory
+@router.post('/', status_code=status.HTTP_201_CREATED, response_model=schemas.MemoryDisplay)
+async def create_new_memory(features:schemas.MemoryCreate, db:Session = Depends(database.get_database()), current_user:models.User = Depends(oauth2.get_current_user)) -> schemas.MemoryDisplay:
     create_data = features.model_dump(exclude_unset=True)
     if not create_data['title']:
         raise HTTPException(detail="The memory should have title!", status_code=status.HTTP_204_NO_CONTENT)
@@ -113,7 +116,7 @@ async def create_new_memory(features:schemas.MemoryCreate, db:Session = Depends(
     db.commit()
     db.refresh(new_memory)
 
-    return 'New Memory succesfully created!'
+    return new_memory
 
 
     

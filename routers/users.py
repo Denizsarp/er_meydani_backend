@@ -9,7 +9,7 @@ import hashing # type: ignore
 from hashing import Hash # type: ignore
 from database import engine, SessionLocal
 from sqlalchemy.orm import Session
-import authentication
+#import authentication
 import oauth2
 import uuid
 from uuid import UUID
@@ -23,13 +23,13 @@ router = APIRouter(
 
 #ASYNC FUNCS--------------------------------------------------------------
 
-
+#get all users
 @router.get('/',status_code=200, response_model=List[schemas.UserDisplay])
 async def search_users(db:Session=Depends(database.get_database), current_user:models.User = Depends(oauth2.get_current_user)):
     users = db.query(models.User).all()
     return users
 
-
+#get user by its ID
 @router.get('/{target_user_id}', status_code=status.HTTP_200_OK, response_model=schemas.UserDisplay)
 async def get_target_user(target_user_id:UUID, db:Session=Depends(database.get_database), current_user:models.User = Depends(oauth2.get_current_user)):
     target_user = db.query(models.User).filter(models.User.id == target_user_id).first()
@@ -39,7 +39,7 @@ async def get_target_user(target_user_id:UUID, db:Session=Depends(database.get_d
         return target_user
 
 
-
+#get your self profile
 @router.get('/me', status_code=status.HTTP_200_OK, response_model=schemas.UserDisplay)
 async def get_your_user(db:Session = Depends(database.get_database), current_user:models.User = Depends(oauth2.get_current_user)) -> schemas.UserDisplay:
     target_user = db.query(models.User).filter(models.User.id == current_user.id).first()
@@ -53,7 +53,7 @@ async def get_your_user(db:Session = Depends(database.get_database), current_use
 
 
 
-
+#delete your profile
 @router.delete('/me', status_code=status.HTTP_200_OK, response_model=str)
 async def delete_user(db: Session=Depends(database.get_database), current_user:models.User = Depends(oauth2.get_current_user)):
     target_user:schemas.User = current_user if current_user else None
@@ -67,12 +67,16 @@ async def delete_user(db: Session=Depends(database.get_database), current_user:m
 
 
 
+#update your profile
 @router.patch('/me', status_code=status.HTTP_200_OK, response_model=schemas.User)
 async def patch_user(new_features:schemas.UserUpdate, db:Session = Depends(database.get_database), current_user:models.User = Depends(oauth2.get_current_user)):
     target_user:schemas.User = current_user if current_user else None
     if not target_user.id == current_user.id:
         raise HTTPException(detail="No authentication", status_code=status.HTTP_401_UNAUTHORIZED)
 
+
+    if not target_user:
+        raise HTTPException(detail="User not found!", status_code=status.HTTP_404_NOT_FOUND)
 
     if target_user:
         user_query:schemas.User = db.query(models.User).filter(models.User.id == target_user.id)

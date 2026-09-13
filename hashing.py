@@ -6,13 +6,19 @@ pwd_context = CryptContext(
 )
 
 
+#Creating Hash class for password security
+
 class Hash:
     @staticmethod
-    def bcrypt(password:str):
-        return pwd_context.hash(password)
+    def bcrypt(plain_password:str):
+        hashed_password = pwd_context.hash(plain_password)
+        return hashed_password 
 
 
     @staticmethod
-    def verify_password(hashed_password:str, plain_password:str):
+    def verify_password(plain_password:str, hashed_password:str):
         return pwd_context.verify(plain_password, hashed_password)
-        
+
+
+
+    

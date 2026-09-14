@@ -58,11 +58,22 @@ async def delete_memory(memory_id:UUID, db:Session = Depends(database.get_databa
         raise HTTPException(detail="Memory not found!", status_code=status.HTTP_404_NOT_FOUND)
 
     else:
-            if target_memory.user_id != current_user.id:
-                raise HTTPException(detail='You are not authorized for this action!', status_code=status.HTTP_403_FORBIDDEN)
-            db.delete(target_memory)
-            db.commit()
-            return 'removal is successful!'
+            try:
+                memory_comments:List[models.Comment] = target_memory.comments
+                for comment in memory_comments:
+                    db.delete(comment)
+
+                if target_memory.user_id != current_user.id:
+                    raise HTTPException(detail='You are not authorized for this action!', status_code=status.HTTP_403_FORBIDDEN)
+
+                
+                db.delete(target_memory)
+                db.commit()
+                return 'removal is successful!'
+            except Exception as exc:
+                raise HTTPException(detail=f'Memory Deletion Error: {str(exc)}', status_code=status.HTTP_400_BAD_REQUEST)
+
+
 
 
     

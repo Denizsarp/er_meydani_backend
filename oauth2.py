@@ -4,6 +4,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 import jwtToken
+from jwtToken import TokenOp
 import database
 import models
 import schemas
@@ -20,7 +21,7 @@ def get_current_user(data:str = Depends(oauth2_scheme), db:Session = Depends(dat
         detail="You are not authorized!",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    current_user_id = jwtToken.verify_token(
+    current_user_id = TokenOp.verify_token(
         data,
         exc
     )

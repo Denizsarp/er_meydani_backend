@@ -16,6 +16,8 @@ from email_verification import Email
 import secrets
 import datetime
 from datetime import datetime, timedelta, timezone
+import jwtToken
+from jwtToken import TokenOp
 
 router = APIRouter(
     prefix="/auth",
@@ -26,10 +28,11 @@ router = APIRouter(
 
 @router.post('/register', status_code=status.HTTP_201_CREATED, response_model=schemas.User)
 def user_register(user_features:schemas.UserCreate, db:Session = Depends(database.get_database)):
+
+    create_data = user_features.model_dump(exclude_unset=True)
     email = create_data["email"].strip().lower()
     username = create_data["username"].strip()
 
-    create_data = user_features.model_dump(exclude_unset=True)
     existing_user_email = db.query(models.User).filter(models.User.email == email).first()
     existing_user_username = db.query(models.User).filter(models.User.username == username).first()
 
@@ -89,7 +92,7 @@ async def user_login(request:OAuth2PasswordRequestForm = Depends(), db:Session =
     else:
         #access token yaratmaliyiz!
 
-        access_token = oauth2.create_access_token(
+        access_token = TokenOp.create_access_token(
             data={"sub": str(user.id)} #(user id bazli access token yarattik!)
         )
 

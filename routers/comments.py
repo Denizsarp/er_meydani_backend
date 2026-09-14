@@ -36,8 +36,8 @@ async def get_comments(memory_id:UUID, db:Session = Depends(database.get_databas
 
 
 #Post Comment
-@router.post('/{memory_id}', status_code=status.HTTP_201_CREATED, response_model=str)
-async def post_comment(memory_id:UUID, features:schemas.CommentCreate, db:Session = Depends(database.get_database), current_user: models.User = Depends(oauth2.get_current_user)):
+@router.post('/{memory_id}', status_code=status.HTTP_201_CREATED, response_model=schemas.CommentDisplay)
+async def post_comment(memory_id:UUID, features:schemas.CommentCreate, db:Session = Depends(database.get_database), current_user: models.User = Depends(oauth2.get_current_user)) -> schemas.CommentDisplay:
     create_data = features.model_dump(exclude_unset=True)
     if not create_data['content'].strip():
         raise HTTPException(detail="Blank comment!", status_code=status.HTTP_400_BAD_REQUEST)
@@ -59,7 +59,7 @@ async def post_comment(memory_id:UUID, features:schemas.CommentCreate, db:Sessio
     db.commit()
     db.refresh(new_comment)
 
-    return 'comment succesfully created!'
+    return new_comment
 
 
 #Delete comment by its id

@@ -59,14 +59,30 @@ async def get_target_user(target_user_id:UUID, db:Session=Depends(database.get_d
 #delete your profile
 @router.delete('/me', status_code=status.HTTP_200_OK, response_model=str)
 async def delete_user(db: Session=Depends(database.get_database), current_user:models.User = Depends(oauth2.get_current_user)):
-    target_user:schemas.User = current_user if current_user else None
+    target_user:models.User = current_user if current_user else None
+
     if target_user:
         if not target_user.id == current_user.id:
             raise HTTPException(detail="No authentication", status_code=status.HTTP_401_UNAUTHORIZED)
+
+        user_memories:List[models.Memory] = target_user.memories
+        for current_memory in user_memories:
+            current_memory_comments:List[models.Comment] = current_memory.comments
+            for target_comment in current_memory_comments:
+                db.delete(target_comment)
+
+            db.delete(current_memory)
+
+        user_another_comments:List[models.Comment] = target_user.comments
+        for comment in user_another_comments:
+            db.delete(comment)
+
         target_id:UUID = current_user.id
         db.query(models.User).filter(models.User.id == target_id).delete(synchronize_session=False)
         db.commit()
         return 'User account deleted successfully!'
+    else:
+        raise HTTPException(detail="User not found!", status_code=status.HTTP_404_NOT_FOUND)
 
 
 

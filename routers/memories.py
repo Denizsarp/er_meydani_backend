@@ -37,6 +37,25 @@ async def get_user_memories(target_user_id:UUID, db:Session = Depends(database.g
 
     return memories_of_user
 
+#GET YOUR MEMORIES
+@router.get('/my-memories', status_code=status.HTTP_200_OK, response_model=List[schemas.MemoryDisplay])
+async def get_self_memories(db:Session = Depends(database.get_database), curren_user:schemas.User = Depends(oauth2.get_current_user)) -> List[schemas.MemoryDisplay]:
+    target_user = db.query(models.User).filter(models.User.id == curren_user.id)
+    if not target_user:
+        raise HTTPException(detail="User not found!", status_code=status.HTTP_404_NOT_FOUND)
+
+    your_memories:List[schemas.MemoryDisplay] = db.query(models.Memory).filter(models.Memory.user_id == target_user.id).all()
+
+    if len(your_memories) > 0:
+        return your_memories
+    else:
+        raise HTTPException(detail="You haven't share any memories yet!", status_code=status.HTTP_404_NOT_FOUND)
+    
+
+
+
+
+
 
 #GET MEMORIY BY ITS ID
 @router.get('/{memory_id}', status_code=status.HTTP_200_OK, response_model=schemas.MemoryDisplay)
@@ -46,6 +65,8 @@ async def get_specific_memory(memory_id:UUID, db:Session = Depends(database.get_
         raise HTTPException(detail="Memory not found!", status_code=status.HTTP_404_NOT_FOUND)
     else:
         return target_memory
+
+
 
 
 

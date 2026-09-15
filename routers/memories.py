@@ -56,7 +56,6 @@ async def get_self_memories(db:Session = Depends(database.get_database), curren_
 
 
 
-
 #GET MEMORIY BY ITS ID
 @router.get('/{memory_id}', status_code=status.HTTP_200_OK, response_model=schemas.MemoryDisplay)
 async def get_specific_memory(memory_id:UUID, db:Session = Depends(database.get_database), current_user:schemas.User = Depends(oauth2.get_current_user)):

@@ -11,6 +11,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
+import retrofit2.HttpException
+import kotlin.math.log
 
 
 class MainActivity : ComponentActivity() {
@@ -24,71 +26,216 @@ class MainActivity : ComponentActivity() {
             var bio by remember{mutableStateOf("")}
             var showVerification by remember {mutableStateOf(false)}
             var verificationCode by remember {mutableStateOf("")}
+            var isVerified by remember {mutableStateOf(false)}
+            var accessToken by remember { mutableStateOf("") }
+            var memories by remember {
+                mutableStateOf(listOf<MemoryCreateResponse>())
+            }
+            var memoryTitle by remember {mutableStateOf("title")}
+            var memoryContent by remember {mutableStateOf("")}
 
+            var loginError by remember {mutableStateOf("")}
 
-            Column{
-                OutlinedTextField(
-                    value = username,
-                    onValueChange = {username = it},
-                    label = {Text("Username")}
-                )
+            var currentScreen by remember {mutableStateOf("register")}
 
-                OutlinedTextField(
-                    value = email,
-                    onValueChange = {email = it},
-                    label = {Text("email")}
-                )
-
-                OutlinedTextField(
-                    value = password,
-                    onValueChange = {password = it},
-                    label = {Text("password")}
-                )
-                OutlinedTextField(
-                    value = bio,
-                    onValueChange = {bio = it},
-                    label = {Text("bio")}
-                )
-
-                Button(
-                    onClick = {
-                        val request = RegisterRequest(
-                            username = username,
-                            email = email,
-                            password = password,
-                            bio = bio,
-                            profile_photo = ""
+            when(currentScreen){
+                "register" -> {
+                    Column{
+                        OutlinedTextField(
+                            value = username,
+                            onValueChange = {username = it},
+                            label = {Text("Username")}
                         )
-                        lifecycleScope.launch{
-                            RetrofitClient.api.register(request)
-                            showVerification = true
-                        }
-                    }
-                ){
-                    Text("Register Now!")
-                }
-                if (showVerification){
-                    OutlinedTextField(
-                        value = verificationCode,
-                        onValueChange = {verificationCode = it},
-                        label = {Text("Verification Code")}
-                    )
 
-                    Button(
-                        onClick = {
-                            val verification  = VerificationRequest(
-                                email = email,
-                                code = verificationCode
+                        OutlinedTextField(
+                            value = email,
+                            onValueChange = {email = it},
+                            label = {Text("email")}
+                        )
+
+                        OutlinedTextField(
+                            value = password,
+                            onValueChange = {password = it},
+                            label = {Text("password")}
+                        )
+                        OutlinedTextField(
+                            value = bio,
+                            onValueChange = {bio = it},
+                            label = {Text("bio")}
+                        )
+
+                        Button(
+                            onClick = {
+                                val request = RegisterRequest(
+                                    username = username,
+                                    email = email,
+                                    password = password,
+                                    bio = bio,
+                                    profile_photo = ""
+                                )
+                                lifecycleScope.launch{
+                                    RetrofitClient.api.register(request)
+                                    showVerification = true
+                                }
+                            }
+                        ){
+                            Text("Register Now!")
+                        }
+                        Button(
+                            onClick = {
+                                currentScreen = "login"
+                            }
+                        ){
+                            Text("Already registered? Login!")
+                        }
+
+                        if (showVerification){
+                            OutlinedTextField(
+                                value = verificationCode,
+                                onValueChange = {verificationCode = it},
+                                label = {Text("Verification Code")}
                             )
-                            lifecycleScope.launch{
-                                RetrofitClient.api.verifyEmail(verification)
+
+                            Button(
+                                onClick = {
+                                    val verification  = VerificationRequest(
+                                        email = email,
+                                        code = verificationCode
+                                    )
+                                    lifecycleScope.launch{
+                                        val response = RetrofitClient.api.verifyEmail(verification)
+                                        val status = response.status
+                                        if (status.equals("success")){
+                                            isVerified = true
+                                            currentScreen = "login"
+                                        }
+                                        else{
+                                            isVerified = false
+                                        }
+                                    }
+                                }
+                            ){
+                                Text("Verificate!")
                             }
                         }
-                    ){
-                        Text("Verificate!")
+                    }
+
+                }
+               "login" -> {
+                   Column{
+                       Text("Login")
+
+                       OutlinedTextField(
+                           value = email,
+                           onValueChange = {email = it},
+                           label = {Text("Email")}
+                       )
+                       OutlinedTextField(
+                           value = password,
+                           onValueChange = {password = it},
+                           label = {Text("Password")}
+                       )
+                       Button(
+                           onClick = {
+                               lifecycleScope.launch {
+                                try{
+                                    val response = RetrofitClient.api.login(
+                                        email = email,
+                                        password = password
+                                    )
+                                    accessToken = response.access_token
+                                    currentScreen = "home"
+                                }
+
+                               catch (e: HttpException){
+                                   loginError = when(e.code()){
+                                       401 -> "Email or password is wrong"
+                                       403 -> "Email is not verified yet!"
+                                       else -> "Login error : ${e.code()}"
+                                   }
+                               }
+                               catch(e : Exception){
+                                   loginError = "can not connect server!"
+                               }
+                               }
+                           }
+                       ){
+                           Text("Login")
+                       }
+
+                       if (loginError.isNotEmpty()){
+                           Text(loginError)
+                       }
+
+                       Button(
+                           onClick = {
+                               currentScreen = "register"
+                           }
+                       ){
+                           Text("Don't have account? Register now!")
+                       }
+                   }
+               }
+                "home" -> {
+                    Column{
+                        Text("Ana Sayfa")
+                        Text("Memory Yarat")
+                        memories.forEach{ memory ->
+                            Text(memory.title)
+                            Text(memory.content)
+
+                            Text("Yazan: ${memory.user.username}")
+                            Text("Oluşturulma: ${memory.created_at}")
+
+                        }
+                        Button(
+                            onClick = {
+                                currentScreen = "createMemory"
+                            }
+                        ){
+                            Text("+")
+                        }
                     }
                 }
+                "createMemory" -> {
+                    Column{
+                        Text("New Memory")
+
+                        OutlinedTextField(
+                            value = memoryTitle,
+                            onValueChange = {memoryTitle = it},
+                            label = {Text("Memory Title")}
+                        )
+                        OutlinedTextField(
+                            value = memoryContent,
+                            onValueChange = {memoryContent = it},
+                            label = {Text("Write...")}
+                        )
+
+                        Button(
+                            onClick = {
+                                val memory = MemoryCreateRequest(
+                                    title = memoryTitle,
+                                    content = memoryContent
+                                )
+                                lifecycleScope.launch{
+
+                                    val response = RetrofitClient.api.createMemory(
+                                        token = "Bearer $accessToken",
+                                        createMemory = memory
+                                    )
+                                    memories = memories + response
+                                    currentScreen = "home"
+                                }
+                            }
+                        ){
+                            Text("Share!")
+                        }
+                    }
+                }
+
             }
+
         }
 
 

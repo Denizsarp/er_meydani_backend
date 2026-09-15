@@ -125,7 +125,7 @@ async def update_memory(memory_id:UUID, new_features:schemas.MemoryUpdate, db:Se
 
 
 #create new memory
-@router.post('/', status_code=status.HTTP_201_CREATED, response_model=schemas.MemoryDisplay)
+@router.post('/create', status_code=status.HTTP_201_CREATED, response_model=schemas.MemoryDisplay)
 async def create_new_memory(features:schemas.MemoryCreate, db:Session = Depends(database.get_database), current_user:models.User = Depends(oauth2.get_current_user)) -> schemas.MemoryDisplay:
     create_data = features.model_dump(exclude_unset=True)
     if not create_data['title']:

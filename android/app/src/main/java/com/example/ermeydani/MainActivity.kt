@@ -33,9 +33,9 @@ class MainActivity : ComponentActivity() {
             }
             var memoryTitle by remember {mutableStateOf("title")}
             var memoryContent by remember {mutableStateOf("")}
-
+            var currentUserMemories by remember {mutableStateOf(listOf<MemoryDisplay>())}
             var loginError by remember {mutableStateOf("")}
-
+            var profileError by remember {mutableStateOf("")}
             var currentScreen by remember {mutableStateOf("register")}
 
             when(currentScreen){
@@ -144,6 +144,9 @@ class MainActivity : ComponentActivity() {
                                         password = password
                                     )
                                     accessToken = response.access_token
+                                    memories = RetrofitClient.api.getAllMemories(
+                                        token = "Bearer $accessToken"
+                                    )
                                     currentScreen = "home"
                                 }
 
@@ -195,6 +198,29 @@ class MainActivity : ComponentActivity() {
                         ){
                             Text("+")
                         }
+
+                        Button(
+                            onClick = {
+                                lifecycleScope.launch{
+                                    try{
+                                        currentUserMemories = RetrofitClient.api.getMyMemories(
+                                            token = "Bearer $accessToken"
+                                        )
+                                        currentScreen = "myProfile"
+
+                                    }
+                                    catch(e : Exception){
+                                        profileError = "Can not load your profile!"
+                                    }
+
+                                }
+                            }
+                        ){
+                            Text("My Profile")
+                        }
+                        if(profileError.isNotEmpty()){
+                            Text(profileError)
+                        }
                     }
                 }
                 "createMemory" -> {
@@ -232,6 +258,26 @@ class MainActivity : ComponentActivity() {
                             Text("Share!")
                         }
                     }
+                }
+
+                "myProfile" -> {
+                    Column{
+                        Text("My Profile")
+                        currentUserMemories.forEach{ memory ->
+                            Text(memory.title)
+                            Text(memory.content)
+                            Text("Oluşturulma: ${memory.created_at}")
+
+                        }
+                        Button(
+                            onClick = {
+                                currentScreen = "home"
+                            }
+                        ){
+                            Text("Go main page")
+                        }
+                    }
+
                 }
 
             }

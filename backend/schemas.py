@@ -11,7 +11,7 @@ class UserCreate(BaseModel):
     email: str
     password: str
     bio: Optional[str] = None
-    profile_photo:Optional[str] = None
+    profile_photo: Optional[str] = None
 
 
 class UserUpdate(BaseModel):
@@ -39,8 +39,10 @@ class MemoryUpdate(BaseModel):
 class CommentCreate(BaseModel):
     content: str
 
+
 class CommentUpdate(BaseModel):
     content: Optional[str] = None
+
 
 # ---------------- DISPLAY SCHEMAS ----------------
 
@@ -100,7 +102,6 @@ class Memory(BaseModel):
 class User(BaseModel):
     id: UUID
     username: str
-    #password: str
     email: str
     bio: Optional[str] = None
     profile_photo: Optional[str] = None
@@ -110,10 +111,11 @@ class User(BaseModel):
         "from_attributes": True
     }
 
+
 class EmailVerification(BaseModel):
-    email:str
-    code:str
+    email: str
+    code: str
 
 
 class ResendVerification(BaseModel):
-    email:str
+    email: str

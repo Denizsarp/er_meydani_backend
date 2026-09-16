@@ -20,8 +20,8 @@ router = APIRouter(
 
 #GET ALL MEMORIES
 @router.get('/', status_code=status.HTTP_200_OK, response_model=List[schemas.MemoryDisplay])
-async def get_all_memories(db:Session = Depends(database.get_database), current_user:models.User = Depends(oauth2.get_current_user)):
-    memories = db.query(models.Memory).all()
+async def get_all_memories(db:Session = Depends(database.get_database), current_user:models.User = Depends(oauth2.get_current_user)) -> schemas.MemoryDisplay:
+    memories:List[schemas.MemoryDisplay] = db.query(models.Memory).all()
     return memories
 
 
@@ -39,8 +39,8 @@ async def get_user_memories(target_user_id:UUID, db:Session = Depends(database.g
 
 #GET YOUR MEMORIES
 @router.get('/my-memories', status_code=status.HTTP_200_OK, response_model=List[schemas.MemoryDisplay])
-async def get_self_memories(db:Session = Depends(database.get_database), curren_user:schemas.User = Depends(oauth2.get_current_user)) -> List[schemas.MemoryDisplay]:
-    target_user = db.query(models.User).filter(models.User.id == curren_user.id)
+async def get_self_memories(db:Session = Depends(database.get_database), current_user:models.User = Depends(oauth2.get_current_user)) -> List[schemas.MemoryDisplay]:
+    target_user = db.query(models.User).filter(models.User.id == current_user.id).first()
     if not target_user:
         raise HTTPException(detail="User not found!", status_code=status.HTTP_404_NOT_FOUND)
 

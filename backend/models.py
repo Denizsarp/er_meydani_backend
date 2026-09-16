@@ -26,8 +26,8 @@ class User(Base):
     verification_code_expires_at = Column(DateTime(timezone=True), nullable=True)
     verification_code_resend_limit = Column(DateTime(timezone=True), nullable=True)
 
-    memories = relationship("Memory", back_populates="user")
-    comments = relationship("Comment", back_populates="user")
+    memories = relationship("Memory", back_populates="user", cascade="all, delete-orphan")
+    comments = relationship("Comment", back_populates="user", cascade="all, delete-orphan")
 
 
 
@@ -48,7 +48,7 @@ class Memory(Base):
     )
 
     user = relationship("User", back_populates="memories")
-    comments = relationship("Comment", back_populates="memory")
+    comments = relationship("Comment", back_populates="memory", cascade="all, delete-orphan")
 
 
 

@@ -38,4 +38,14 @@ interface ApiService{
         @Body createMemory : MemoryCreateRequest
     ): MemoryCreateResponse
 
+
+    @GET("/memories")
+    suspend fun getAllMemories(
+        @Header("Authorization") token : String
+    ):List<MemoryCreateResponse>
+
+    @GET ("/memories/my-memories")
+    suspend fun getMyMemories(
+        @Header("Authorization") token : String
+    ):List<MemoryDisplay>
 }

@@ -27,7 +27,8 @@ data class LoginResponse(
 
 data class UserDisplay(
     val username: String,
-    val profile_photo: String?
+    val profile_photo: String?,
+    val memories : List<MemoryCreateResponse>
 )
 
 //Memory classes -----------------------------------------------------------------------------------
@@ -42,6 +43,13 @@ data class MemoryCreateResponse(
     val content:String,
     val created_at : String,
     val user:UserDisplay,
+    val comments:List<CommentDisplay>
+)
+
+data class MemoryDisplay(
+    val title:String,
+    val content:String,
+    val created_at: String,
     val comments:List<CommentDisplay>
 )
 

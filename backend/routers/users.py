@@ -32,8 +32,8 @@ async def search_users(db:Session=Depends(database.get_database), current_user:m
 
 
 #get your self profile
-@router.get('/me', status_code=status.HTTP_200_OK, response_model=schemas.UserDisplay)
-async def get_your_user(db:Session = Depends(database.get_database), current_user:models.User = Depends(oauth2.get_current_user)) -> schemas.UserDisplay:
+@router.get('/me', status_code=status.HTTP_200_OK, response_model=schemas.User)
+async def get_your_user(db:Session = Depends(database.get_database), current_user:models.User = Depends(oauth2.get_current_user)) -> schemas.User:
     target_user = db.query(models.User).filter(models.User.id == current_user.id).first()
     if not target_user:
         raise HTTPException(detail="No User Found!", status_code=404)
@@ -65,9 +65,9 @@ async def delete_user(db: Session=Depends(database.get_database), current_user:m
         if not target_user.id == current_user.id:
             raise HTTPException(detail="No authentication", status_code=status.HTTP_401_UNAUTHORIZED)
 
-        user_memories:List[models.Memory] = target_user.memories
+        user_memories:List[models.Memory] = list(target_user.memories)
         for current_memory in user_memories:
-            current_memory_comments:List[models.Comment] = current_memory.comments
+            current_memory_comments:List[models.Comment] = list(current_memory.comments)
             for target_comment in current_memory_comments:
                 db.delete(target_comment)
 
@@ -76,9 +76,10 @@ async def delete_user(db: Session=Depends(database.get_database), current_user:m
         user_another_comments:List[models.Comment] = target_user.comments
         for comment in user_another_comments:
             db.delete(comment)
+        db.flush()
 
-        target_id:UUID = current_user.id
-        db.query(models.User).filter(models.User.id == target_id).delete(synchronize_session=False)
+        db.delete(target_user)
+        
         db.commit()
         return 'User account deleted successfully!'
     else:
@@ -89,7 +90,7 @@ async def delete_user(db: Session=Depends(database.get_database), current_user:m
 #update your profile
 @router.patch('/me', status_code=status.HTTP_200_OK, response_model=schemas.UserDisplay)
 async def patch_user(new_features:schemas.UserUpdate, db:Session = Depends(database.get_database), current_user:models.User = Depends(oauth2.get_current_user)) -> schemas.UserDisplay:
-    target_user:schemas.User = current_user if current_user else None
+    target_user:models.User = current_user if current_user else None
     if not target_user.id == current_user.id:
         raise HTTPException(detail="No authentication", status_code=status.HTTP_401_UNAUTHORIZED)
 

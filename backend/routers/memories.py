@@ -73,7 +73,7 @@ async def get_specific_memory(memory_id:UUID, db:Session = Depends(database.get_
 #DELETE MEMORY BY ITS ID
 @router.delete('/{memory_id}', status_code=status.HTTP_200_OK, response_model=str)
 async def delete_memory(memory_id:UUID, db:Session = Depends(database.get_database), current_user:models.User = Depends(oauth2.get_current_user)):
-    target_memory = db.query(models.Memory).filter(models.Memory.id == memory_id).first()
+    target_memory:models.Memory = db.query(models.Memory).filter(models.Memory.id == memory_id).first()
     if not target_memory:
         raise HTTPException(detail="Memory not found!", status_code=status.HTTP_404_NOT_FOUND)
 

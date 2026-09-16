@@ -21,7 +21,6 @@ class UserUpdate(BaseModel):
     bio: Optional[str] = None
     profile_photo: Optional[str] = None
 
-
 # ---------------- MEMORY INPUT ----------------
 
 class MemoryCreate(BaseModel):

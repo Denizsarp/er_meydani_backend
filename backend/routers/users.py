@@ -91,16 +91,21 @@ async def delete_user(db: Session=Depends(database.get_database), current_user:m
 @router.patch('/me', status_code=status.HTTP_200_OK, response_model=schemas.UserDisplay)
 async def patch_user(new_features:schemas.UserUpdate, db:Session = Depends(database.get_database), current_user:models.User = Depends(oauth2.get_current_user)) -> schemas.UserDisplay:
     target_user:models.User = current_user if current_user else None
+
+    if not target_user:
+        raise HTTPException(detail="User not found!", status_code=status.HTTP_404_NOT_FOUND)
     if not target_user.id == current_user.id:
         raise HTTPException(detail="No authentication", status_code=status.HTTP_401_UNAUTHORIZED)
 
 
-    if not target_user:
-        raise HTTPException(detail="User not found!", status_code=status.HTTP_404_NOT_FOUND)
+
 
     if target_user:
-        user_query:schemas.User = db.query(models.User).filter(models.User.id == target_user.id)
+        user_query = db.query(models.User).filter(models.User.id == target_user.id)
         update_data = new_features.model_dump(exclude_unset=True)
+
+        if "password" in update_data and update_data['password']:
+            update_data['password'] = Hash.bcrypt(update_data['password'])
 
         user_query.update(update_data, synchronize_session=False)
         db.commit()

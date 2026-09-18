@@ -11,6 +11,8 @@ from sqlalchemy.orm import Session
 import oauth2
 import uuid
 from uuid import UUID
+import password_validation
+from password_validation import PasswordOP
 
 
 router = APIRouter(
@@ -105,6 +107,9 @@ async def patch_user(new_features:schemas.UserUpdate, db:Session = Depends(datab
         update_data = new_features.model_dump(exclude_unset=True)
 
         if "password" in update_data and update_data['password']:
+            pass_score = PasswordOP.validate_password(update_data['password'])
+            if pass_score:
+                raise  HTTPException(detail=f"Password Error: {pass_score}", status_code=status.HTTP_409_CONFLICT)
             update_data['password'] = Hash.bcrypt(update_data['password'])
 
         user_query.update(update_data, synchronize_session=False)

@@ -18,6 +18,9 @@ import datetime
 from datetime import datetime, timedelta, timezone
 import jwtToken
 from jwtToken import TokenOp
+import password_validation
+from password_validation import PasswordOP
+
 
 router = APIRouter(
     prefix="/auth",
@@ -40,6 +43,12 @@ def user_register(user_features:schemas.UserCreate, db:Session = Depends(databas
         raise HTTPException(detail="This email has been registered already!", status_code=status.HTTP_409_CONFLICT)
     if existing_user_username:
         raise HTTPException(detail="This username is already taken!", status_code=status.HTTP_409_CONFLICT)
+
+    pass_score:str = PaswordOP.validate_password(create_data['password'])
+    if pass_score:
+        raise HTTPException(detail=f"Password Error: {pass_score}", status_code=status.HTTP_409_CONFLICT)
+    
+
 
     hashed_password = Hash.bcrypt(create_data['password'])
 

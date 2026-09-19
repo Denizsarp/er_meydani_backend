@@ -1,28 +1,54 @@
 package com.example.ermeydani
 
+
+
+
+
 import android.os.Bundle
-import android.os.PersistableBundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.TextObfuscationMode
+import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.PlainTooltip
+import androidx.compose.material3.SecureTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipAnchorPosition
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.paneTitle
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
-import kotlin.math.log
-
-
+import androidx.compose.material3.ExperimentalMaterial3Api
 class MainActivity : ComponentActivity() {
+
+    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
+
         super.onCreate(savedInstanceState)
 
         setContent{
             var username by remember{mutableStateOf("")}
             var email by remember {mutableStateOf("")}
             var password by remember{mutableStateOf("")}
+            val passwordState = rememberTextFieldState()
             var bio by remember{mutableStateOf("")}
             var showVerification by remember {mutableStateOf(false)}
             var verificationCode by remember {mutableStateOf("")}
@@ -44,6 +70,9 @@ class MainActivity : ComponentActivity() {
             var emailVerificationError by remember {mutableStateOf("")}
             var memoryCreationError by remember{mutableStateOf("")}
             var currentScreen by remember {mutableStateOf("register")}
+
+
+            var passwordHidden by rememberSaveable { mutableStateOf(true) }
 
             var commentCreationContent by remember{mutableStateOf("")}
 
@@ -165,20 +194,56 @@ class MainActivity : ComponentActivity() {
                        OutlinedTextField(
                            value = email,
                            onValueChange = {email = it},
-                           label = {Text("Email")}
+                           label = {Text("Username/E-mail")}
                        )
-                       OutlinedTextField(
-                           value = password,
-                           onValueChange = {password = it},
-                           label = {Text("Password")}
+                       SecureTextField(
+                           state = passwordState,
+                           label = {Text("Enter your password...")},
+                           keyboardOptions =
+                               KeyboardOptions(
+                                   autoCorrectEnabled = false,
+                                   keyboardType =
+                                       if (passwordHidden) KeyboardType.Password else KeyboardType.PasswordVisible,
+                               ),
+                           textObfuscationMode = if (passwordHidden) TextObfuscationMode.System else TextObfuscationMode.Visible,
+                           trailingIcon = {
+                               val description =
+                                   if (passwordHidden) "Show Password" else "Hide Password"
+                               TooltipBox(
+                                   positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
+                                       TooltipAnchorPosition.Above
+                                   ),
+                                   tooltip = {
+                                       PlainTooltip(
+                                           modifier = Modifier.semantics {
+                                               liveRegion = LiveRegionMode.Assertive
+                                               paneTitle = description
+                                           }
+                                       ) {
+                                           Text(description)
+                                       }
+                                   },
+                                   state = rememberTooltipState(),
+                               ) {
+                                   IconButton(onClick = { passwordHidden = !passwordHidden }) {
+                                       val visibilityIcon =
+                                           if (passwordHidden) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
+                                       Icon(
+                                           imageVector = visibilityIcon,
+                                           contentDescription = description
+                                       )
+                                   }
+                               }
+                           },
                        )
                        Button(
                            onClick = {
                                lifecycleScope.launch {
                                 try{
+                                    val passwordSend = passwordState.text.toString()
                                     val response = RetrofitClient.api.login(
                                         email = email,
-                                        password = password
+                                        password = passwordSend
                                     )
                                     accessToken = response.access_token
                                     memories = RetrofitClient.api.getAllMemories(

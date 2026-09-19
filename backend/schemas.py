@@ -75,6 +75,7 @@ class Comment(BaseModel):
 
 
 class MemoryDisplay(BaseModel):
+    id : UUID
     title: str
     content: str
     created_at: datetime

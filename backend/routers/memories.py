@@ -28,7 +28,7 @@ async def get_all_memories(db:Session = Depends(database.get_database), current_
 
 #GET USER'S MEMORIES
 @router.get('/user/{target_user_id}', status_code=status.HTTP_200_OK, response_model=List[schemas.MemoryDisplay])
-async def get_user_memories(target_user_id:UUID, db:Session = Depends(database.get_database), current_user:schemas.User = Depends(oauth2.get_current_user)):
+async def get_user_memories(target_user_id:UUID, db:Session = Depends(database.get_database), current_user:schemas.User = Depends(oauth2.get_current_user)) -> List[schemas.MemoryDisplay]:
     target_user = db.query(models.User).filter(models.User.id == target_user_id).first()
     if not target_user:
         raise HTTPException(detail="User not found!", status_code=status.HTTP_404_NOT_FOUND)
@@ -58,7 +58,7 @@ async def get_self_memories(db:Session = Depends(database.get_database), current
 
 #GET MEMORIY BY ITS ID
 @router.get('/{memory_id}', status_code=status.HTTP_200_OK, response_model=schemas.MemoryDisplay)
-async def get_specific_memory(memory_id:UUID, db:Session = Depends(database.get_database), current_user:schemas.User = Depends(oauth2.get_current_user)):
+async def get_specific_memory(memory_id:UUID, db:Session = Depends(database.get_database), current_user:schemas.User = Depends(oauth2.get_current_user)) -> schemas.MemoryDisplay:
     target_memory = db.query(models.Memory).filter(models.Memory.id == memory_id).first()
     if not target_memory:
         raise HTTPException(detail="Memory not found!", status_code=status.HTTP_404_NOT_FOUND)
@@ -129,9 +129,9 @@ async def update_memory(memory_id:UUID, new_features:schemas.MemoryUpdate, db:Se
 async def create_new_memory(features:schemas.MemoryCreate, db:Session = Depends(database.get_database), current_user:models.User = Depends(oauth2.get_current_user)) -> schemas.MemoryDisplay:
     create_data = features.model_dump(exclude_unset=True)
     if not create_data['title']:
-        raise HTTPException(detail="The memory should have title!", status_code=status.HTTP_204_NO_CONTENT)
+        raise HTTPException(detail="The memory should have title!", status_code=status.HTTP_422_UNPROCESSABLE_CONTENT)
     if not create_data['content']:
-        raise HTTPException(detail="The memory should have content!", status_code=status.HTTP_204_NO_CONTENT)
+        raise HTTPException(detail="The memory should have content!", status_code=status.HTTP_422_UNPROCESSABLE_CONTENT)
     date_of_memory = datetime.now()
 
     create_data['created_at'] = date_of_memory

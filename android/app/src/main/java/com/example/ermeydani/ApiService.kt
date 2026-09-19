@@ -8,6 +8,8 @@ import retrofit2.http.DELETE
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.Field
 import retrofit2.http.Header
+import retrofit2.http.Path
+
 
 interface ApiService{
     //User Methods -----------------------------------------------------------------------------------
@@ -48,4 +50,17 @@ interface ApiService{
     suspend fun getMyMemories(
         @Header("Authorization") token : String
     ):List<MemoryDisplay>
+
+
+
+
+
+//Comment Methods -----------------------------------------------------------------------------------
+
+    @POST("/comments/{memory_id}")
+    suspend fun postComment(
+        @Path("memory_id") memoryId: String,
+        @Header("Authorization") token : String,
+        @Body comment: CommentCreateRequest
+    ): CommentDisplay
 }

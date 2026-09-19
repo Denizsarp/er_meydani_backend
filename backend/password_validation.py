@@ -2,7 +2,6 @@ class PasswordOP():
     @staticmethod
     def validate_password(plain_password:str) -> str:
         size:int = len(plain_password)
-        plain_password.strip()
         exc = ''
 
         

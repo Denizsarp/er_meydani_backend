@@ -31,6 +31,11 @@ data class UserDisplay(
     val memories : List<MemoryCreateResponse>
 )
 
+data class UserOnComment(
+    val username: String,
+    val profile_photo: String
+)
+
 //Memory classes -----------------------------------------------------------------------------------
 
 data class MemoryCreateRequest(
@@ -39,6 +44,7 @@ data class MemoryCreateRequest(
 )
 
 data class MemoryCreateResponse(
+    val id:String,
     val title:String,
     val content:String,
     val created_at : String,
@@ -59,7 +65,12 @@ data class MemoryDisplay(
 
 data class CommentDisplay(
     val content:String,
-    val user : UserDisplay
+    val user : UserDisplay,
+    val created_at: String
+)
+
+data class CommentCreateRequest(
+    val content:String
 )
 
 

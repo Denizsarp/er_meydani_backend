@@ -31,12 +31,21 @@ class MainActivity : ComponentActivity() {
             var memories by remember {
                 mutableStateOf(listOf<MemoryCreateResponse>())
             }
-            var memoryTitle by remember {mutableStateOf("title")}
+            var currentMemory by remember{mutableStateOf<MemoryCreateResponse?>(null)}
+            var comments by remember {mutableStateOf(listOf<CommentDisplay>())}
+            var commentCreationFields by remember{mutableStateOf(false)}
+            var memoryTitle by remember {mutableStateOf("")}
             var memoryContent by remember {mutableStateOf("")}
             var currentUserMemories by remember {mutableStateOf(listOf<MemoryDisplay>())}
             var loginError by remember {mutableStateOf("")}
+            var registerError by remember {mutableStateOf("")}
             var profileError by remember {mutableStateOf("")}
+            var commentCreationError by remember {mutableStateOf("")}
+            var emailVerificationError by remember {mutableStateOf("")}
+            var memoryCreationError by remember{mutableStateOf("")}
             var currentScreen by remember {mutableStateOf("register")}
+
+            var commentCreationContent by remember{mutableStateOf("")}
 
             when(currentScreen){
                 "register" -> {
@@ -44,7 +53,7 @@ class MainActivity : ComponentActivity() {
                         OutlinedTextField(
                             value = username,
                             onValueChange = {username = it},
-                            label = {Text("Username")}
+                            label = {Text("Username/E-mail")}
                         )
 
                         OutlinedTextField(
@@ -74,12 +83,25 @@ class MainActivity : ComponentActivity() {
                                     profile_photo = ""
                                 )
                                 lifecycleScope.launch{
-                                    RetrofitClient.api.register(request)
-                                    showVerification = true
+                                    try{
+                                        RetrofitClient.api.register(request)
+                                        showVerification = true
+                                    }catch(e : HttpException){
+                                        registerError = when(e.code()){
+                                            409 -> "Username or Email is already Taken"
+                                            else -> "Registration error : ${e.code()}"
+                                        }
+                                    }catch(e : Exception){
+                                        registerError = "Can not connect to server please try again later!"
+                                    }
+
                                 }
                             }
                         ){
                             Text("Register Now!")
+                        }
+                        if (registerError.isNotEmpty()){
+                            Text(registerError)
                         }
                         Button(
                             onClick = {
@@ -103,19 +125,34 @@ class MainActivity : ComponentActivity() {
                                         code = verificationCode
                                     )
                                     lifecycleScope.launch{
-                                        val response = RetrofitClient.api.verifyEmail(verification)
-                                        val status = response.status
-                                        if (status.equals("success")){
-                                            isVerified = true
-                                            currentScreen = "login"
+                                        try{
+                                            val response = RetrofitClient.api.verifyEmail(verification)
+                                            val status = response.status
+                                            if (status.equals("success")){
+                                                isVerified = true
+                                                currentScreen = "login"
+                                            }
+                                            else{
+                                                isVerified = false
+                                            }
+                                        }catch(e : HttpException){
+                                            emailVerificationError = when(e.code()){
+                                                400 -> "Verification code has expired!"
+                                                404 -> "User not found, please register first."
+                                                else -> "Verification Error: ${e.code()}"
+                                            }
+
+                                        }catch(e : Exception){
+                                            emailVerificationError = "Connection with server lost!"
                                         }
-                                        else{
-                                            isVerified = false
-                                        }
+
                                     }
                                 }
                             ){
                                 Text("Verificate!")
+                            }
+                            if(emailVerificationError.isNotEmpty()){
+                                Text(emailVerificationError)
                             }
                         }
                     }
@@ -189,6 +226,15 @@ class MainActivity : ComponentActivity() {
 
                             Text("Yazan: ${memory.user.username}")
                             Text("Oluşturulma: ${memory.created_at}")
+                            Button(
+                                onClick = {
+                                    comments = memory.comments
+                                    currentMemory = memory
+                                    currentScreen = "commentSection"
+                                }
+                            ){
+                                Text("Comments")
+                            }
 
                         }
                         Button(
@@ -245,17 +291,28 @@ class MainActivity : ComponentActivity() {
                                     content = memoryContent
                                 )
                                 lifecycleScope.launch{
-
-                                    val response = RetrofitClient.api.createMemory(
-                                        token = "Bearer $accessToken",
-                                        createMemory = memory
-                                    )
-                                    memories = memories + response
-                                    currentScreen = "home"
+                                    try{
+                                        val response = RetrofitClient.api.createMemory(
+                                            token = "Bearer $accessToken",
+                                            createMemory = memory
+                                        )
+                                        memories = memories + response
+                                        currentScreen = "home"
+                                    }catch (e : HttpException){
+                                        memoryCreationError = when(e.code()){
+                                            422 -> "Memory should have title and content!"
+                                            else -> "Memory Creation Error : ${e.code()}"
+                                        }
+                                    }catch(e : Exception){
+                                        memoryCreationError = "Connection with server lost!"
+                                    }
                                 }
                             }
                         ){
                             Text("Share!")
+                        }
+                        if(memoryCreationError.isNotEmpty()){
+                            Text(memoryCreationError)
                         }
                     }
                 }
@@ -279,11 +336,101 @@ class MainActivity : ComponentActivity() {
                     }
 
                 }
+                "commentSection" -> {
+                    Column{
+                        Text("Yorumlar")
+                        Text("          ")
+                        Text("          ")
+                        Text("          ")
+                        comments.forEach{ comment ->
+                            Text(comment.user.username)
+                            //Text(comment.user.profile_photo)
+                            Text(comment.content)
 
+                        }
+
+                        Button(
+                            onClick = {
+                                commentCreationFields = true
+                            }
+                        ){
+                            Text("Write Comment")
+                        }
+
+
+                        Button(
+                            onClick = {
+                                commentCreationFields = false
+                                commentCreationContent = ""
+                                commentCreationError = ""
+                                currentScreen = "home"
+                            }
+                        ){
+                            Text("Home")
+                        }
+
+                        if(commentCreationFields){
+                            OutlinedTextField(
+                                value = commentCreationContent,
+                                onValueChange = {commentCreationContent = it},
+                                label = {Text("Write...")}
+                            )
+
+                            Button(
+                                onClick = {
+                                    val newComment = CommentCreateRequest(
+                                        content = commentCreationContent
+                                    )
+                                    currentMemory?.let {selectedMemory ->
+                                        lifecycleScope.launch{
+                                            try{
+                                                val response = RetrofitClient.api.postComment(
+                                                    memoryId = selectedMemory.id,
+                                                    token = "Bearer $accessToken",
+                                                    comment = newComment
+                                                )
+
+                                                val updatedComments = comments + response
+                                                comments = updatedComments
+                                                memories = memories.map{memory ->
+                                                    if(memory.id == selectedMemory.id){
+                                                        memory.copy(
+                                                            comments = updatedComments
+                                                        )
+                                                    }else{
+                                                        memory
+                                                    }
+
+                                                }
+                                                currentMemory = selectedMemory.copy(
+                                                    comments = updatedComments
+                                                )
+                                                commentCreationContent = ""
+                                                commentCreationFields = false
+                                                commentCreationError = ""
+                                            }catch(e : HttpException){
+                                                commentCreationError = when(e.code()){
+                                                    400 -> "No content!"
+                                                    404 -> "Memory not found!"
+                                                    else -> "Comment Creation Error : ${e.code()}"
+
+                                                }
+                                            }catch(e : Exception){
+                                                commentCreationError = "${e.javaClass.simpleName}: ${e.message}"
+                                            }
+                                        }
+                                    }
+                                }
+                            ){
+                                Text("Share")
+                            }
+                            if(commentCreationError.isNotEmpty()){
+                                Text(commentCreationError)
+                            }
+                        }
+                    }
+                }
             }
-
         }
-
-
     }
 }
